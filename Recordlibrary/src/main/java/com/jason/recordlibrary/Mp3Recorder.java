@@ -7,7 +7,6 @@ import android.view.View;
 import com.jason.recordlibrary.utils.FileUtil;
 import com.jason.recordlibrary.view.RecordViewDialog;
 import java.io.File;
-import java.util.Date;
 
 /**
  * Created by Admin on 2017-08-07.
@@ -15,6 +14,7 @@ import java.util.Date;
 
 public class Mp3Recorder {
     private static Mp3Recorder instance;
+    private String mp3Name = "temp.mp3";
     private RecordThread recordThread;
     private File file;
     private RecordViewDialog recordViewDialog;
@@ -39,8 +39,7 @@ public class Mp3Recorder {
         if (recordThread != null) {
             stop();
         }
-        FileUtil.deleteDirWihtFile(FileUtil.getCacheRootFile(context));
-        file = new File(FileUtil.getCacheRootFile(context), new Date().getTime() + ".mp3");
+        file = new File(FileUtil.getCacheRootFile(context), mp3Name);
         recordThread = new RecordThread(file, handler);
         recordThread.start();
 
@@ -58,7 +57,7 @@ public class Mp3Recorder {
             public void run() {
                 if (recordViewDialog != null) recordViewDialog.dismiss();
             }
-        },100);
+        }, 100);
     }
 
     private View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -69,7 +68,7 @@ public class Mp3Recorder {
             if (i == R.id.ok) {
                 recordListener.onComplete(file.getPath());
             } else if (i == R.id.delete) {
-                FileUtil.deleteDirWihtFile(FileUtil.getCacheRootFile(v.getContext()));
+                new File(FileUtil.getCacheRootFile(v.getContext()), mp3Name).delete();
                 recordListener.onCancel();
             }
         }
@@ -80,8 +79,13 @@ public class Mp3Recorder {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (recordThread == null) return;
-            if (recordViewDialog != null)
-                recordViewDialog.setVolume(Integer.parseInt(new java.text.DecimalFormat("0").format(msg.obj)));
+            if (recordViewDialog != null) {
+                try {
+                    recordViewDialog.setVolume(Integer.parseInt(new java.text.DecimalFormat("0").format(msg.obj)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     };
 }
